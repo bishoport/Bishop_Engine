@@ -1,0 +1,354 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="GLCore::Application" Collapsed="true">
+    <Position X="29" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAgAAQDCAAABAAkQAAgAAAAACAAAAAABAAACAAAI=</HashCode>
+      <FileName>src\GLCore\Core\Application.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Input" Collapsed="true">
+    <Position X="3.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>UAAAAAAAAAEAAAAAhgQAAABAkAAAAAAAACAgAAAAAAg=</HashCode>
+      <FileName>src\GLCore\Core\Input.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Layer" Collapsed="true">
+    <Position X="0.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAQAAAAAAAAEAEAAAAAAQIAAEAAEAAABAAEABAA=</HashCode>
+      <FileName>src\GLCore\Core\Layer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::LayerStack" Collapsed="true">
+    <Position X="32.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACACAAAAAAAAACAEAQAAICAAAAAAgAAAIAAAA=</HashCode>
+      <FileName>src\GLCore\Core\LayerStack.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Log" Collapsed="true">
+    <Position X="34.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAAAAAAAAAAAAAAgAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Core\Log.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Shader" Collapsed="true">
+    <Position X="30.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QDgAAAAAAAAIgBAAABIMCAAAAAAAAAAABAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Core\Render\Shader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Timestep" Collapsed="true">
+    <Position X="32.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAIBAAAAAQAAAAAEAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Core\Timestep.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Window" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAAAAABAAAAAAABAAQAAAGAAgAAAAEEAAAA=</HashCode>
+      <FileName>src\GLCore\Core\Window.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::WindowResizeEvent" Collapsed="true">
+    <Position X="12.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAFAAAAAABAAAAAAACAEAAAAEAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\ApplicationEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::WindowCloseEvent" Collapsed="true">
+    <Position X="12.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\ApplicationEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::AppTickEvent" Collapsed="true">
+    <Position X="19" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\ApplicationEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::AppUpdateEvent" Collapsed="true">
+    <Position X="24.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\ApplicationEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::AppRenderEvent" Collapsed="true">
+    <Position X="26.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\ApplicationEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Event" Collapsed="true">
+    <Position X="15.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAIAIAAIAAAEAAAAAAAAAAAAAAAAAAAAAAAABAA=</HashCode>
+      <FileName>src\GLCore\Events\Event.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::EventDispatcher" Collapsed="true">
+    <Position X="30.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAgAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\Event.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::KeyEvent" Collapsed="true">
+    <Position X="19.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAACAAAA=</HashCode>
+      <FileName>src\GLCore\Events\KeyEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::KeyPressedEvent" Collapsed="true">
+    <Position X="17.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAABAAAIAAABAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\KeyEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::KeyReleasedEvent" Collapsed="true">
+    <Position X="19.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\KeyEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::KeyTypedEvent" Collapsed="true">
+    <Position X="22" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\KeyEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::MouseMovedEvent" Collapsed="true">
+    <Position X="20.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAEAAADAAAAAAAAAAAAYAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\MouseEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::MouseScrolledEvent" Collapsed="true">
+    <Position X="18" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAMAAAAAAEAAAAAAAAgAAAAAAAAAAAAACAAAA=</HashCode>
+      <FileName>src\GLCore\Events\MouseEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::MouseButtonEvent" Collapsed="true">
+    <Position X="14.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAMAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\MouseEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::MouseButtonPressedEvent" Collapsed="true">
+    <Position X="14.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\MouseEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::MouseButtonReleasedEvent" Collapsed="true">
+    <Position X="11.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Events\MouseEvent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::ImGuiLayer" Collapsed="true">
+    <Position X="0.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABIACAAAAAAAAAAAgEAAAAAAAIAAEAAABAABAAAAAAA=</HashCode>
+      <FileName>src\GLCore\ImGui\ImGuiLayer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::WindowsInput" Collapsed="true">
+    <Position X="3.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAEAAAAABAAAAAAAgAAAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>src\Platform\Windows\WindowsInput.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::WindowsWindow" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAEAAAAAAABAAIABAQBAAAAAECAAgAACAEEAAAA=</HashCode>
+      <FileName>src\Platform\Windows\WindowsWindow.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Utils::OrthographicCamera" Collapsed="true">
+    <Position X="30.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAQACCAAIAAAAAAAASAACAAAggAAgAAAAEAAAA=</HashCode>
+      <FileName>src\GLCore\Util\OrthographicCamera.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Utils::OrthographicCameraController" Collapsed="true">
+    <Position X="32.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAEAAgAAAAACAIAAAkAAIACEAAAAAAAEEAAAAAEAIAI=</HashCode>
+      <FileName>src\GLCore\Util\OrthographicCameraController.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Utils::MeshHelper" Collapsed="true">
+    <Position X="29" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAIAQAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Util\MeshHelper.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Utils::PerspectiveCamera" Collapsed="true">
+    <Position X="34.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAQACCAAJAgAAAAAASAAiVAAggAAgAAAIECAIA=</HashCode>
+      <FileName>src\GLCore\Util\PerspectiveCamera.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GLCore::Utils::PerspectiveCameraController" Collapsed="true">
+    <Position X="29" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAgAAAAAAAIAAAEAEoAQAABAAAAAAAAAAAAEAJAA=</HashCode>
+      <FileName>src\GLCore\Util\PerspectiveCameraController.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::DirectionalLight" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QCCBAAAAoABCIAIACFIQAAIQASAgAAIACQMBJAhUASA=</HashCode>
+      <FileName>src\ECS\directional_light_comp.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::Drawable" Collapsed="true">
+    <Position X="5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>oAAAIAAAAACAAAIACBIAAAAAAACAAwIACAAAAAAEgQA=</HashCode>
+      <FileName>src\ECS\Drawable_comp.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::Component" Collapsed="true">
+    <Position X="5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgABAAAAAAAAAAAAIAAAAAAAAAAAIAAAAAAAAEAQA=</HashCode>
+      <FileName>src\ECS\ECS.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::Entity" Collapsed="true">
+    <Position X="10.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAECAKAAFAAAAAEAAAAAAAAIAAEAAg=</HashCode>
+      <FileName>src\ECS\ECS.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::Transform" Collapsed="true">
+    <Position X="7.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAARAAADAIAAiAAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>src\ECS\ECS.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::Manager" Collapsed="true">
+    <Position X="13" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAAAAAAAIAAAgAAAAAAQAAAAAAAACEAAA=</HashCode>
+      <FileName>src\ECS\ECS.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::PointLight" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAhAAAAAIAAFIAIAACCQAAAAKASQAAIAAUASA=</HashCode>
+      <FileName>src\ECS\point_light_comp.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ECS::CubeRotator" Collapsed="true">
+    <Position X="9.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>src\ECS\RotatorComponent.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="GLCore::WindowProps" Collapsed="true">
+    <Position X="32.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEABAAAAEAAAAAAAEAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\Core\Window.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GLCore::MeshInfo" Collapsed="true">
+    <Position X="32.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>oAAAShACAAAAABAAAQAAALRACAgYAgAAEAQAEBAVQCA=</HashCode>
+      <FileName>src\GLCore\DataStructs.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GLCore::Image" Collapsed="true">
+    <Position X="29" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAUAQAACAAAAAAAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>src\GLCore\DataStructs.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GLCore::Texture" Collapsed="true">
+    <Position X="30.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAEAABABAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\DataStructs.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GLCore::Material" Collapsed="true">
+    <Position X="30.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABBAAAAAAAAAAAAAAAAAAAAAIEMAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\DataStructs.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GLCore::ModelInfo" Collapsed="true">
+    <Position X="34.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\DataStructs.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="GLCore::ModelParent" Collapsed="true">
+    <Position X="29" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>src\GLCore\DataStructs.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="GLCore::EventType" Collapsed="true">
+    <Position X="32.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAEACAAAAAAgAAAIgAAAAgAAAAEBAgAAAAAIABFgAQA=</HashCode>
+      <FileName>src\GLCore\Events\Event.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="GLCore::EventCategory" Collapsed="true">
+    <Position X="30.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAQAAAAAAAAAAAAAAAAAAAQAAQAAEAAIA=</HashCode>
+      <FileName>src\GLCore\Events\Event.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="GLCore::Utils::DebugLogLevel" Collapsed="true">
+    <Position X="29" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAgAAAAAAAAgAQAAAAAAAAAEEAAA=</HashCode>
+      <FileName>src\GLCore\Util\OpenGLDebug.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
