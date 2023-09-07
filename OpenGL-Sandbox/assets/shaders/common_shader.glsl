@@ -87,6 +87,8 @@ struct Material
     float     normalIntensity;
     float     metallicValue;
     float     roughnessValue;
+    float     reflectanceValue;
+    float     fresnelCoefValue;
 };
 
 

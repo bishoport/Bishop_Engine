@@ -225,6 +225,8 @@ namespace GLCore
         float normalIntensity = 0.5f;
         float metallicValue = 0.0f;
         float roughnessValue = 0.05f;
+        float reflectanceValue = 0.04f;
+        float fresnelCoefValue = 5.0f;
 
         void PrepareMaterial()
         {

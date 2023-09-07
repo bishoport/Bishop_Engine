@@ -31,17 +31,20 @@ uniform sampler2D brdfLUT;
 // technique somewhere later in the normal mapping tutorial.
 vec3 getNormalFromMap()  //material.normalIntensity
 {
+    float intensity = material.normalIntensity; // Define una variable para la intensidad
     vec3 tangentNormal = texture(material.normalMap, TexCoords).xyz * 2.0 - 1.0;
 
+    // Modifica la fuerza del mapa normal en el espacio tangencial
+    //tangentNormal *= vec3(1.0, 1.0, intensity);
 
-    vec3 Q1  = dFdx(WorldPos);
-    vec3 Q2  = dFdy(WorldPos);
+    vec3 Q1 = dFdx(WorldPos);
+    vec3 Q2 = dFdy(WorldPos);
     vec2 st1 = dFdx(TexCoords);
     vec2 st2 = dFdy(TexCoords);
 
-    vec3 N   = normalize(Normal);
-    vec3 T   = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B   = -normalize(cross(N, T));
+    vec3 N = normalize(Normal);
+    vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
+    vec3 B = -normalize(cross(N, T));
     mat3 TBN = mat3(T, B, N);
 
     return normalize(TBN * tangentNormal);
@@ -137,7 +140,7 @@ void main()
 
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)    
-    vec3 F0 = vec3(0.04); 
+    vec3 F0 = vec3(material.reflectanceValue);
     F0 = mix(F0, albedo, metallic);
 
     //reflectance equation

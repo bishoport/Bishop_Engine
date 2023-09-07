@@ -1321,7 +1321,7 @@ void TestLayer::OnImGuiRender()
 					}
 					ImGui::EndDragDropTarget();
 				}
-				ImGui::SliderFloat("Normal Intensity", &drawable->modelInfo.model_material.normalIntensity, 0.0f, 1.0f);
+				ImGui::SliderFloat("Normal Intensity", &drawable->modelInfo.model_material.normalIntensity, 0.0f, 10.0f);
 				ImGui::Image((void*)(intptr_t)drawable->modelInfo.model_material.normalMap.textureID, ImVec2(128, 128), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255));
 				ImGui::Dummy(ImVec2(10.0f, 10.0f));
 				
@@ -1349,6 +1349,8 @@ void TestLayer::OnImGuiRender()
 
 				}
 				ImGui::SliderFloat("Metallic", &drawable->modelInfo.model_material.metallicValue, 0.0f, 50.0f);
+				ImGui::SliderFloat("F0", &drawable->modelInfo.model_material.reflectanceValue, 0.0f, 1.0f, "%.2f");
+				ImGui::SliderFloat("Fresnel Co", &drawable->modelInfo.model_material.fresnelCoefValue, 0.0f, 10.0f, "%.2f");
 				ImGui::Image((void*)(intptr_t)drawable->modelInfo.model_material.metallicMap.textureID, ImVec2(128, 128), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255));
 				ImGui::Dummy(ImVec2(10.0f, 10.0f));
 

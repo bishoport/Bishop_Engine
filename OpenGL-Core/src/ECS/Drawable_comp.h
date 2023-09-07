@@ -181,6 +181,8 @@ namespace ECS
 			mainShader->setFloat("material.metallicValue",   modelInfo.model_material.metallicValue);
 			mainShader->setFloat("material.roughnessValue",  modelInfo.model_material.roughnessValue);
 			mainShader->setFloat("material.normalIntensity", modelInfo.model_material.normalIntensity);
+			mainShader->setFloat("material.reflectanceValue", modelInfo.model_material.reflectanceValue);
+			mainShader->setFloat("material.fresnelCoefValue", modelInfo.model_material.fresnelCoefValue);
 		}
 
 
