@@ -47,6 +47,9 @@ private:
 	ECS::Entity* directionalLight = nullptr;
 	vec3 globalAmbient = glm::vec3(0.0f);
 
+
+	bool useHDRIlumination = false;
+
 	vector<ECS::Entity*> pointLights;
 
 	

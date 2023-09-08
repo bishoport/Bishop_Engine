@@ -616,19 +616,23 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
 
+	pbrShader->setBool("useHDR", useHDRIlumination);
+	if (useHDRIlumination == true)
+	{
+		// render skybox (render as last to prevent overdraw)
+		backgroundShader->use();
+		backgroundShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);  // display prefilter map
+		renderCube();
 
-	// render skybox (render as last to prevent overdraw)
-	backgroundShader->use();
-	backgroundShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
-	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);  // display prefilter map
-	renderCube();
-
-	// render BRDF map to screen
-	//brdfShader->use();
-	//renderQuad();
+		// render BRDF map to screen
+		//brdfShader->use();
+		//renderQuad();
+	}
+	
 	
 	
 	
@@ -752,6 +756,7 @@ void TestLayer::CheckIfPointerIsOverObject()
 		pickingObj = true;
 	}
 }
+
 bool TestLayer::rayIntersectsBoundingBox(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, glm::vec3 boxMin, glm::vec3 boxMax)
 {
 	float tMin = (boxMin.x - rayOrigin.x) / rayDirection.x;
@@ -896,7 +901,6 @@ void TestLayer::renderCube()
 	glBindVertexArray(0);
 }
 
-
 std::string TestLayer::ws2s(const std::wstring& wide)
 {
 	int len = WideCharToMultiByte(CP_ACP, 0, wide.c_str(), wide.size(), NULL, 0, NULL, NULL);
@@ -1028,9 +1032,6 @@ void TestLayer::OnImGuiRender()
 	}
 
 
-
-
-
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -1090,8 +1091,9 @@ void TestLayer::OnImGuiRender()
 	ImGui::End();
 
 
-
 	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
+
 
 
 
@@ -1102,6 +1104,7 @@ void TestLayer::OnImGuiRender()
 	if (ImGui::ColorEdit4("", glm::value_ptr(backgroundColor))) {};
 
 	ImGui::ColorEdit3("Iluminación Ambiental", (float*)&globalAmbient);
+	ImGui::Checkbox("HDR ILUMINATION", &useHDRIlumination);
 	ImGui::Checkbox("HDR", &postpreccessing);
 	ImGui::SliderFloat("Exposure", &exposure, 0.0f, 20.0f);
 	ImGui::SliderFloat("Gamma"   , &gammaInput, 0.0f, 20.0f);
