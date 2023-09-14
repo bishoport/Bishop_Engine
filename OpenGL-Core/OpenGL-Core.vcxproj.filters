@@ -4,17 +4,26 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ECS">
+      <UniqueIdentifier>{F76D2FA9-634D-AE44-6C65-391BD8C314A6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\GLCore">
       <UniqueIdentifier>{980D6210-84C5-A35D-EDCC-7CB9D9A33E4E}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\GLCore\Core">
       <UniqueIdentifier>{F070BB56-5CFC-281B-650D-AC0FD117851B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\GLCore\Core\Render">
+      <UniqueIdentifier>{5FE1CE49-4BDB-F79B-3448-8EAC20E15D08}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\GLCore\Events">
       <UniqueIdentifier>{7C7E7DF8-E894-7B8E-310C-07B09D614C16}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\GLCore\ImGui">
       <UniqueIdentifier>{C254942E-AE4D-B380-D77F-9805C3D7928C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\GLCore\Loaders">
+      <UniqueIdentifier>{91BD6212-7DA1-2368-E601-1EBBD2040EEA}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\GLCore\Util">
       <UniqueIdentifier>{E563C556-51EF-321B-5A00-B60FC60A8F1B}</UniqueIdentifier>
@@ -51,6 +60,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ECS\Drawable_comp.h">
+      <Filter>src\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\ECS.h">
+      <Filter>src\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\RotatorComponent.h">
+      <Filter>src\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\directional_light_comp.h">
+      <Filter>src\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\grid_world_comp.h">
+      <Filter>src\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\point_light_comp.h">
+      <Filter>src\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECSCore.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\GLCore.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -78,11 +108,17 @@
     <ClInclude Include="src\GLCore\Core\MouseButtonCodes.h">
       <Filter>src\GLCore\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\GLCore\Core\Render\Shader.h">
+      <Filter>src\GLCore\Core\Render</Filter>
+    </ClInclude>
     <ClInclude Include="src\GLCore\Core\Timestep.h">
       <Filter>src\GLCore\Core</Filter>
     </ClInclude>
     <ClInclude Include="src\GLCore\Core\Window.h">
       <Filter>src\GLCore\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLCore\DataStructs.h">
+      <Filter>src\GLCore</Filter>
     </ClInclude>
     <ClInclude Include="src\GLCore\Events\ApplicationEvent.h">
       <Filter>src\GLCore\Events</Filter>
@@ -99,6 +135,15 @@
     <ClInclude Include="src\GLCore\ImGui\ImGuiLayer.h">
       <Filter>src\GLCore\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\GLCore\Loaders\IMGLoader.h">
+      <Filter>src\GLCore\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLCore\Loaders\ModelLoader.h">
+      <Filter>src\GLCore\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLCore\Util\MeshHelper.h">
+      <Filter>src\GLCore\Util</Filter>
+    </ClInclude>
     <ClInclude Include="src\GLCore\Util\OpenGLDebug.h">
       <Filter>src\GLCore\Util</Filter>
     </ClInclude>
@@ -107,6 +152,15 @@
     </ClInclude>
     <ClInclude Include="src\GLCore\Util\OrthographicCameraController.h">
       <Filter>src\GLCore\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLCore\Util\PerspectiveCamera.h">
+      <Filter>src\GLCore\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLCore\Util\PerspectiveCameraController.h">
+      <Filter>src\GLCore\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GLCoreLoaders.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\GLCoreUtils.h">
       <Filter>src</Filter>
@@ -1227,21 +1281,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\GLCore\Util\PerspectiveCamera.h" />
-    <ClInclude Include="src\GLCore\Util\PerspectiveCameraController.h" />
-    <ClInclude Include="src\GLCore\Util\MeshHelper.h" />
-    <ClInclude Include="src\ECS\directional_light_comp.h" />
-    <ClInclude Include="src\ECS\Drawable_comp.h" />
-    <ClInclude Include="src\ECS\ECS.h" />
-    <ClInclude Include="src\ECS\grid_world_comp.h" />
-    <ClInclude Include="src\ECS\point_light_comp.h" />
-    <ClInclude Include="src\ECS\RotatorComponent.h" />
-    <ClInclude Include="src\GLCore\Core\Render\Shader.h" />
-    <ClInclude Include="src\GLCore\Loaders\IMGLoader.h" />
-    <ClInclude Include="src\GLCore\Loaders\ModelLoader.h" />
-    <ClInclude Include="src\GLCore\DataStructs.h" />
-    <ClInclude Include="src\ECSCore.h" />
-    <ClInclude Include="src\GLCoreLoaders.h" />
     <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h" />
   </ItemGroup>
   <ItemGroup>
@@ -1263,6 +1302,12 @@
     <ClCompile Include="src\GLCore\ImGui\ImGuiLayer.cpp">
       <Filter>src\GLCore\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\GLCore\Loaders\IMGLoader.cpp">
+      <Filter>src\GLCore\Loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GLCore\Loaders\ModelLoader.cpp">
+      <Filter>src\GLCore\Loaders</Filter>
+    </ClCompile>
     <ClCompile Include="src\GLCore\Util\OpenGLDebug.cpp">
       <Filter>src\GLCore\Util</Filter>
     </ClCompile>
@@ -1270,6 +1315,12 @@
       <Filter>src\GLCore\Util</Filter>
     </ClCompile>
     <ClCompile Include="src\GLCore\Util\OrthographicCameraController.cpp">
+      <Filter>src\GLCore\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GLCore\Util\PerspectiveCamera.cpp">
+      <Filter>src\GLCore\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GLCore\Util\PerspectiveCameraController.cpp">
       <Filter>src\GLCore\Util</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
@@ -1284,13 +1335,6 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\GLCore\Util\PerspectiveCamera.cpp" />
-    <ClCompile Include="src\GLCore\Util\PerspectiveCameraController.cpp" />
-    <ClCompile Include="src\GLCore\Loaders\IMGLoader.cpp" />
-    <ClCompile Include="src\GLCore\Loaders\ModelLoader.cpp" />
     <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\ClassDiagram.cd" />
   </ItemGroup>
 </Project>

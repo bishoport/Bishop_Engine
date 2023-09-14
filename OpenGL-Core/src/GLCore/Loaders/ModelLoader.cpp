@@ -129,9 +129,13 @@ namespace GLCore::Loaders
                 mesh->mVertices[meshInfo.indices[j]].z,
                 1);
 
-            meshInfo.vertices.push_back(pos.x);
+            VertexInfo vertex;
+            vertex.position = glm::vec3(pos);
+            meshInfo.vertices.push_back(vertex);
+
+            /*meshInfo.vertices.push_back(pos.x);
             meshInfo.vertices.push_back(pos.y);
-            meshInfo.vertices.push_back(pos.z);
+            meshInfo.vertices.push_back(pos.z);*/
 
 
             //-SACAMOS LAS NORMALES

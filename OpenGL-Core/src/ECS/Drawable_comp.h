@@ -54,7 +54,7 @@ namespace ECS
 
 
 			//------------------------------------CALCULATE BOUNDING BOX--------------------------------------
-			modelInfo.model_mesh.CalculateBoundingBox(entity->getComponent<Transform>().GetTransform());
+			//modelInfo.model_mesh.CalculateBoundingBox(entity->getComponent<Transform>().getLocalModelMatrix());
 			//------------------------------------------------------------------------------------------------
 
 
@@ -83,12 +83,15 @@ namespace ECS
 			Transform& transform = entity->getComponent<Transform>();
 
 			// Ahora, directamente podemos obtener la matriz de transformación del objeto
-			model_transform_matrix = transform.GetTransform();
+			model_transform_matrix = transform.getLocalModelMatrix();
 
 			// Si hay un padre, combinamos nuestras transformaciones con las de él.
 			if (entity->getComponent<Transform>().parent != nullptr) {
-				model_transform_matrix = entity->getComponent<Transform>().parent->getComponent<Transform>().GetTransform() * model_transform_matrix;
+				model_transform_matrix = entity->getComponent<Transform>().parent->getComponent<Transform>().getLocalModelMatrix() * model_transform_matrix;
 			}
+
+
+			modelInfo.model_mesh.CalculateBoundingBox();
 		}
 
 
@@ -187,6 +190,31 @@ namespace ECS
 
 
 
+		//GLCore::AABB getGlobalAABB()
+		//{
+		//	//Get global scale thanks to our transform
+		//	const glm::vec3 globalCenter{ entity->getComponent<Transform>().getModelMatrix() * glm::vec4(modelInfo.model_mesh.boundingVolume->center, 1.f) };
+
+		//	// Scaled orientation
+		//	const glm::vec3 right   = entity->getComponent<Transform>().getRight() * modelInfo.model_mesh.boundingVolume->extents.x;
+		//	const glm::vec3 up      = entity->getComponent<Transform>().getUp() * modelInfo.model_mesh.boundingVolume->extents.y;
+		//	const glm::vec3 forward = entity->getComponent<Transform>().getForward() * modelInfo.model_mesh.boundingVolume->extents.z;
+
+		//	const float newIi = std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, right)) +
+		//		std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, up)) +
+		//		std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, forward));
+
+		//	const float newIj = std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, right)) +
+		//		std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, up)) +
+		//		std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, forward));
+
+		//	const float newIk = std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, right)) +
+		//		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, up)) +
+		//		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, forward));
+
+		//	return GLCore::AABB(globalCenter, newIi, newIj, newIk);
+		//}
+
 
 		void draw() override
 		{
@@ -208,13 +236,11 @@ namespace ECS
 
 
 
-
-
-
 			//----------------------------------------CALCULATE BOUNDING BOX FOR EACH MESH----------------------------------------
 			// Calculamos el tamaño y el centro de la caja original (en el espacio del objeto)
-			glm::vec3 size = (modelInfo.model_mesh.originalBoundingBoxMax - modelInfo.model_mesh.originalBoundingBoxMin);
-			glm::vec3 center = (modelInfo.model_mesh.originalBoundingBoxMax + modelInfo.model_mesh.originalBoundingBoxMin) / 2.0f;
+			glm::vec3 size = (modelInfo.model_mesh.boundingVolume->extents) * 2.0f;
+			glm::vec3 center = modelInfo.model_mesh.boundingVolume->center;
+
 
 			// Creamos la matriz de transformación de la caja delimitadora inicial
 			glm::mat4 bb_transform_matrix = glm::mat4(1.0f);
@@ -222,21 +248,21 @@ namespace ECS
 			bb_transform_matrix = glm::scale(bb_transform_matrix, size);
 
 			// Obtenemos la matriz de transformación del objeto
-			glm::mat4 obj_transform_matrix = entity->getComponent<Transform>().GetTransform();
+			glm::mat4 obj_transform_matrix = entity->getComponent<Transform>().getLocalModelMatrix();
 
 			// Multiplicamos la matriz de transformación del objeto por la matriz de transformación de la caja delimitadora
 			bb_transform_matrix = obj_transform_matrix * bb_transform_matrix;
 
 			if (entity->getComponent<Transform>().parent != nullptr) {
-				bb_transform_matrix = entity->getComponent<Transform>().parent->getComponent<Transform>().GetTransform() * bb_transform_matrix;
+				bb_transform_matrix = entity->getComponent<Transform>().parent->getComponent<Transform>().getLocalModelMatrix() * bb_transform_matrix;
 			}
 
 			// Aquí actualizamos el boundingBoxMin y boundingBoxMax con la caja delimitadora transformada
-			glm::vec3 boundingBoxMin = glm::vec3(bb_transform_matrix * glm::vec4(modelInfo.model_mesh.originalBoundingBoxMin, 1.0f));
-			glm::vec3 boundingBoxMax = glm::vec3(bb_transform_matrix * glm::vec4(modelInfo.model_mesh.originalBoundingBoxMax, 1.0f));
+			glm::vec3 boundingBoxMin = glm::vec3(bb_transform_matrix * glm::vec4(modelInfo.model_mesh.boundingVolume->m_min, 1.0f));
+			glm::vec3 boundingBoxMax = glm::vec3(bb_transform_matrix * glm::vec4(modelInfo.model_mesh.boundingVolume->m_max, 1.0f));
 
-			modelInfo.model_mesh.boundingBoxMin = boundingBoxMin;
-			modelInfo.model_mesh.boundingBoxMax = boundingBoxMax;
+			modelInfo.model_mesh.boundingVolume->m_min = boundingBoxMin;
+			modelInfo.model_mesh.boundingVolume->m_max = boundingBoxMax;
 
 
 			//--Draw
@@ -294,7 +320,7 @@ namespace ECS
 
 
 /*if (entity->parent != nullptr) {
-	bb_transform_matrix = entity->parent->getComponent<Transform>().GetTransform() * bb_transform_matrix;
+	bb_transform_matrix = entity->parent->getComponent<Transform>().getLocalModelMatrix() * bb_transform_matrix;
 }*/
 
 

@@ -52,16 +52,13 @@
     <TargetName>OpenGL-Core</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Label="Vcpkg">
-    <VcpkgEnabled>false</VcpkgEnabled>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>glpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLCORE_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;GLCORE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\ImGuizmo;vendor\glm;vendor\stb_image;vendor\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\ImGuizmo;vendor\glm;vendor\stb_image;vendor\assimp;vendor\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -76,7 +73,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>opengl32.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\bisho\Documents\PRODUCCION_2023\SANDBOX_OpenGL_4.6_v2\OpenGL-Core\vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\pdortegon\Documents\PROPIOS\Bishop_Engine\OpenGL-Core\vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -106,15 +103,14 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\ECSCore.h" />
-    <ClInclude Include="src\ECS\directional_light_comp.h" />
     <ClInclude Include="src\ECS\Drawable_comp.h" />
     <ClInclude Include="src\ECS\ECS.h" />
+    <ClInclude Include="src\ECS\RotatorComponent.h" />
+    <ClInclude Include="src\ECS\directional_light_comp.h" />
     <ClInclude Include="src\ECS\grid_world_comp.h" />
     <ClInclude Include="src\ECS\point_light_comp.h" />
-    <ClInclude Include="src\ECS\RotatorComponent.h" />
+    <ClInclude Include="src\ECSCore.h" />
     <ClInclude Include="src\GLCore.h" />
-    <ClInclude Include="src\GLCoreLoaders.h" />
     <ClInclude Include="src\GLCore\Core\Application.h" />
     <ClInclude Include="src\GLCore\Core\Core.h" />
     <ClInclude Include="src\GLCore\Core\Input.h" />
@@ -140,6 +136,7 @@
     <ClInclude Include="src\GLCore\Util\OrthographicCameraController.h" />
     <ClInclude Include="src\GLCore\Util\PerspectiveCamera.h" />
     <ClInclude Include="src\GLCore\Util\PerspectiveCameraController.h" />
+    <ClInclude Include="src\GLCoreLoaders.h" />
     <ClInclude Include="src\GLCoreUtils.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
@@ -547,9 +544,6 @@
     <ProjectReference Include="vendor\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

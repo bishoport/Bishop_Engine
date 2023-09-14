@@ -49,6 +49,9 @@ namespace ECS
 
 
 
+
+
+
 	class Transform : public Component
 	{
 	public:
@@ -56,15 +59,22 @@ namespace ECS
 		glm::quat rotation; // Cambiamos 'eulers' por 'rotation'
 		glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
 
+		//Global space information concatenate in matrix
+		glm::mat4 m_modelMatrix = glm::mat4(1.0f);
+
+		//Dirty flag
+		bool m_isDirty = true;
+
 		Entity* parent;
 		std::vector<Entity*> children;
 
-		glm::mat4 GetTransform() const
+		glm::mat4 getLocalModelMatrix() const
 		{
 			return glm::translate(glm::mat4(1.0f), position)
 				 * glm::toMat4(rotation)
 				 * glm::scale(glm::mat4(1.0f), scale);
 		}
+
 
 		void SetTransform(const glm::mat4& transformMatrix)
 		{
@@ -74,27 +84,112 @@ namespace ECS
 
 			glm::decompose(transformMatrix, scale, rotation, position, skew, perspective);
 			rotation = glm::conjugate(rotation);
-
-			// Ya no necesitamos convertir la rotación a ángulos eulerianos
-			// eulers = glm::eulerAngles(rotation);
 		}
+
 
 		// Función para obtener los ángulos de Euler
 		glm::vec3 GetVec() const
 		{
 			return glm::eulerAngles(rotation);
 		}
+
+		void computeModelMatrix()
+		{
+			m_modelMatrix = getLocalModelMatrix();
+			m_isDirty = false;
+		}
+
+		void computeModelMatrix(const glm::mat4& parentGlobalModelMatrix)
+		{
+			m_modelMatrix = parentGlobalModelMatrix * getLocalModelMatrix();
+			m_isDirty = false;
+		}
+
+		void setLocalPosition(const glm::vec3& newPosition)
+		{
+			position = newPosition;
+			m_isDirty = true;
+		}
+
+		/*void setLocalRotation(const glm::vec3& newRotation)
+		{
+			m_eulerRot = newRotation;
+			m_isDirty = true;
+		}*/
+
+		void setLocalScale(const glm::vec3& newScale)
+		{
+			scale = newScale;
+			m_isDirty = true;
+		}
+
+		const glm::vec3& getGlobalPosition() const
+		{
+			return m_modelMatrix[3];
+		}
+
+		const glm::vec3& getLocalPosition() const
+		{
+			return position;
+		}
+
+		//const glm::vec3& getLocalRotation() const
+		//{
+		//	return m_eulerRot;
+		//}
+
+		const glm::vec3& getLocalScale() const
+		{
+			return scale;
+		}
+
+		const glm::mat4& getModelMatrix() const
+		{
+			return m_modelMatrix;
+		}
+
+		glm::vec3 getRight() const
+		{
+			return m_modelMatrix[0];
+		}
+
+
+		glm::vec3 getUp() const
+		{
+			return m_modelMatrix[1];
+		}
+
+		glm::vec3 getBackward() const
+		{
+			return m_modelMatrix[2];
+		}
+
+		glm::vec3 getForward() const
+		{
+			return -m_modelMatrix[2];
+		}
+
+		glm::vec3 getGlobalScale() const
+		{
+			return { glm::length(getRight()), glm::length(getUp()), glm::length(getBackward()) };
+		}
+
+		bool isDirty() const
+		{
+			return m_isDirty;
+		}
+
 	};
+
+
+
+
 
 
 	class Entity
 	{
 	private:
-		
 		std::vector<std::unique_ptr<Component>> components;
-
-		
-
 		ComponentArray componentArray;
 		ComponentBitSet componentBitSet;
 

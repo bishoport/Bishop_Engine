@@ -7,6 +7,8 @@
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
 
+
+
 using namespace ECS;
 using namespace GLCore;
 using namespace GLCore::Utils;
@@ -28,8 +30,11 @@ float quadVertices[] = { // vertex attributes for a quad that fills the entire s
 TestLayer::TestLayer() : m_PerspectiveCameraController(16.0f / 9.0f) {}
 TestLayer::~TestLayer(){}
 
+std::chrono::high_resolution_clock::time_point TestLayer::lastTime = std::chrono::high_resolution_clock::now();
+
 void TestLayer::OnAttach()
 {	
+
 
 	//--ImGUI Configuration--------------------
 	std::ifstream ifile("imgui.ini");
@@ -150,214 +155,12 @@ void TestLayer::OnAttach()
 
 	// pbr: load the HDR environment map
 	// ---------------------------------
-	hdrTexture = GLCore::Loaders::loadHDR("assets/textures/HDR/newport_loft.hdr");
+	//hdrTexture_daylight = GLCore::Loaders::loadHDR("assets/textures/HDR/newport_loft.hdr");
+	//hdrTexture_daylight = GLCore::Loaders::loadHDR("assets/textures/HDR/rural_asphalt_road_4k.hdr");
+	hdrTexture_daylight = GLCore::Loaders::loadHDR("assets/textures/HDR/kloofendal_43d_clear_puresky_4k.hdr");
+	hdrTexture_nightlight = GLCore::Loaders::loadHDR("assets/textures/HDR/rural_asphalt_road_4k.hdr");
 
-
-
-
-	// pbr: setup cubemap to render to and attach to framebuffer
-	// ---------------------------------------------------------
-	glGenTextures(1, &envCubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
-	// ----------------------------------------------------------------------------------------------
-	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	glm::mat4 captureViews[] =
-	{
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-	};
-
-	// pbr: convert HDR equirectangular environment map to cubemap equivalent
-	// ----------------------------------------------------------------------
-	equirectangularToCubemapShader->use();
-	equirectangularToCubemapShader->setInt("equirectangularMap", 0);
-	equirectangularToCubemapShader->setMat4("projection", captureProjection);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, hdrTexture);
-
-	glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		equirectangularToCubemapShader->setMat4("view", captureViews[i]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		renderCube();
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// then let OpenGL generate mipmaps from first mip face (combatting visible dots artifact)
-	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-
-
-
-	// pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
-	// --------------------------------------------------------------------------------
-	glGenTextures(1, &irradianceMap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
-
-	// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
-	// -----------------------------------------------------------------------------
-	irradianceShader->use();
-	irradianceShader->setInt("environmentMap", 0);
-	irradianceShader->setMat4("projection", captureProjection);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-
-	glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		irradianceShader->setMat4("view", captureViews[i]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		renderCube();
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-	// pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
-	// --------------------------------------------------------------------------------
-	
-	glGenTextures(1, &prefilterMap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear 
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
-	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-
-	// pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
-	// ----------------------------------------------------------------------------------------------------
-	prefilterShader->use();
-	prefilterShader->setInt("environmentMap", 0);
-	prefilterShader->setMat4("projection", captureProjection);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	unsigned int maxMipLevels = 5;
-	for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
-	{
-		// reisze framebuffer according to mip-level size.
-		unsigned int mipWidth = static_cast<unsigned int>(128 * std::pow(0.5, mip));
-		unsigned int mipHeight = static_cast<unsigned int>(128 * std::pow(0.5, mip));
-		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
-		glViewport(0, 0, mipWidth, mipHeight);
-
-		float roughness = (float)mip / (float)(maxMipLevels - 1);
-		prefilterShader->setFloat("roughness", roughness);
-		for (unsigned int i = 0; i < 6; ++i)
-		{
-			prefilterShader->setMat4("view", captureViews[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
-
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			renderCube();
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// pbr: generate a 2D LUT from the BRDF equations used.
-	// ----------------------------------------------------
-	unsigned int brdfLUTTexture;
-	glGenTextures(1, &brdfLUTTexture);
-
-	// pre-allocate enough memory for the LUT texture.
-	glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
-	// be sure to set wrapping mode to GL_CLAMP_TO_EDGE
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
-	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
-
-	glViewport(0, 0, 512, 512);
-	brdfShader->use();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	renderQuad();
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-
-
-
-
-
-
-
-
-	//--POSTPROCCESS FrameBuffer
-	glGenFramebuffers(1, &postprocessingFBO);
-	// create floating point color buffer
-	glGenTextures(1, &colorBuffer);
-	glBindTexture(GL_TEXTURE_2D, colorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// create depth buffer (renderbuffer)
-	glGenRenderbuffers(1, &rboDepth);
-	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewportWidth, viewportHeight);
-
-	// attach buffers
-	glBindFramebuffer(GL_FRAMEBUFFER, postprocessingFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) std::cout << "Framebuffer not complete!" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0); //unbind texture
-	//------------------------------------------------------------------------------------------------------------
-
-	postprocessing_shader->use();
-	postprocessing_shader->setInt("hdrBuffer", 0);
+	prepare_PBR_IBL();
 
 
 
@@ -395,12 +198,430 @@ void TestLayer::OnAttach()
 }
 
 
+void TestLayer::OnUpdate(GLCore::Timestep ts)
+{
+
+	// Comprueba si han pasado 3 milisegundos y si el slider está activo
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float, std::milli> elapsed = currentTime - lastTime;
+
+	if (elapsed.count() >= 3.0f && isSliderActive) {
+		// Llama a tu función aquí
+		prepare_PBR_IBL();
+		lastTime = currentTime;
+	}
+
+
+	manager.refresh();
+	manager.update();
+
+	entitiesInScene = manager.getAllEntities();
+
+	viewportHeight = windowHeight;
+	viewportWidth = windowWidth - width_dock_Inspector - width_dock_AssetScene;
+
+
+	//-POINTS LIGHT ->SHADOW MAP RENDERING--------------------------------------------------------------------
+	pointLight_shadow_mapping_depth_shader->use();
+	pointLight_shadow_mapping_depth_shader->setInt("numPointLights", pointLights.size());
+	for (unsigned int i = 0; i < pointLights.size(); i++)
+	{
+		if (pointLights[i]->getComponent<PointLight>().drawShadows == true)
+		{
+			pointLights[i]->getComponent<PointLight>().shadowMappingProjection(entitiesInScene);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+	//-DIRECTIONAL LIGHT ->SHADOW MAP RENDERING--------------------------------------------------------------------
+	if (directionalLight != nullptr)
+	{
+		if (directionalLight->getComponent<DirectionalLight>().drawShadows == true)
+		{
+			directionalLight->getComponent <DirectionalLight>().shadowMappingProjection(entitiesInScene);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+
+	//--SELECT FRAMEBUFFER---------------------------------------------------------------
+	if (postpreccessing)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, postprocessingFBO);
+	}
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+	glViewport(0, 0, viewportWidth, viewportHeight);
+	glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	//--CAMERA
+	aspectRatio = static_cast<float>(viewportWidth) / static_cast<float>(viewportHeight);
+	m_PerspectiveCameraController.GetCamera().SetProjection(m_PerspectiveCameraController.GetCamera().GetFov(), aspectRatio, 0.1f, 100.0f);
+	m_PerspectiveCameraController.OnUpdate(ts);
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+	//--DEBUG SHADER
+	debug_shader->use();
+	debug_shader->setMat4("projection", m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
+	debug_shader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+	//--MAIN SHADER (PBR)
+	pbrShader->use();
+	pbrShader->setMat4("projection", m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
+	pbrShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
+	pbrShader->setVec3("camPos", m_PerspectiveCameraController.GetCamera().GetPosition());
+
+	pbrShader->setVec3("globalAmbient", globalAmbient);
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+	manager.draw();
+
+
+	//--DRAW DIR LIGHT
+	if (directionalLight != nullptr)
+	{
+		directionalLight->getComponent<DirectionalLight>().setDataInShader();
+	}
+	//----------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+	//--DRAW POINTS LIGHT
+	pbrShader->use();
+	pbrShader->setInt("numPointLights", pointLights.size());
+	for (unsigned int i = 0; i < pointLights.size(); i++)//set lighting points uniforms
+	{
+		pointLights[i]->getComponent<PointLight>().setDataInShader();
+	}
+	//----------------------------------------------------------------------------------------------------------------------------
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
+	pbrShader->setBool("useHDR", useHDRIlumination);
+	if (useHDRIlumination == true)
+	{
+		// render skybox (render as last to prevent overdraw)
+		backgroundShader->use();
+		backgroundShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);  // display prefilter map
+		renderCube();
+
+		// render BRDF map to screen
+		//brdfShader->use();
+		//renderQuad();
+	}
+
+
+
+
+
+	//--POST-PROCCESSING
+	if (postpreccessing)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		postprocessing_shader->use();
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_2D, colorBuffer);
+
+		postprocessing_shader->setInt("hdr", postpreccessing);
+		postprocessing_shader->setInt("hdrBuffer", 8);
+		postprocessing_shader->setFloat("exposure", exposure);
+		postprocessing_shader->setFloat("gammaInput", gammaInput);
+
+		glDisable(GL_DEPTH_TEST);
+		renderQuad();
+		glEnable(GL_DEPTH_TEST);
+	}
+	// --------------------------------------------------------------------------------------------------------------------------
+
+
+	//--CHECK CLICK DRAWABLES
+	CheckIfPointerIsOverObject();
+}
+
+
+
 void TestLayer::generatePointLight()
 {
 	ECS::Entity* pointLight_entity = &manager.addEntity();
 	pointLight_entity->addComponent<PointLight>();
 	pointLight_entity->getComponent<PointLight>().setLightValues(glm::vec3(0.0f), pointLights.size(), pbrShader, pointLight_shadow_mapping_depth_shader, debug_shader);
 	pointLights.push_back(pointLight_entity);
+}
+
+
+
+void TestLayer::cleanUp()
+{
+	if (glIsTexture(envCubemap)) glDeleteTextures(1, &envCubemap);
+	if (glIsTexture(irradianceMap)) glDeleteTextures(1, &irradianceMap);
+	if (glIsTexture(prefilterMap)) glDeleteTextures(1, &prefilterMap);
+	if (glIsTexture(brdfLUTTexture)) glDeleteTextures(1, &brdfLUTTexture);
+	if (glIsTexture(colorBuffer)) glDeleteTextures(1, &colorBuffer);
+	if (glIsTexture(hdrTexture_daylight)) glDeleteTextures(1, &hdrTexture_daylight);
+	if (glIsTexture(hdrTexture_nightlight)) glDeleteTextures(1, &hdrTexture_nightlight);
+
+	if (glIsFramebuffer(captureFBO)) glDeleteFramebuffers(1, &captureFBO);
+	if (glIsFramebuffer(postprocessingFBO)) glDeleteFramebuffers(1, &postprocessingFBO);
+
+	glDeleteRenderbuffers(1, &captureRBO);
+	glDeleteRenderbuffers(1, &rboDepth);
+}
+
+
+
+void TestLayer::prepare_PBR_IBL()
+{
+	// pbr: setup cubemap to render to and attach to framebuffer
+	// ---------------------------------------------------------
+	glGenTextures(1, &envCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+	
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+
+	// pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
+	// ----------------------------------------------------------------------------------------------
+	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	glm::mat4 captureViews[] =
+	{
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+	};
+
+
+
+
+	// pbr: convert HDR equirectangular environment map to cubemap equivalent
+	// ----------------------------------------------------------------------
+	equirectangularToCubemapShader->use();
+	equirectangularToCubemapShader->setInt("equirectangularDayLightMap", 0);
+	equirectangularToCubemapShader->setInt("equirectangularNightLightMap", 1);
+	equirectangularToCubemapShader->setFloat("mixFactor", mixFactor);
+	equirectangularToCubemapShader->setMat4("projection", captureProjection);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, hdrTexture_daylight);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, hdrTexture_nightlight);
+
+	glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		equirectangularToCubemapShader->setMat4("view", captureViews[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		renderCube();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// then let OpenGL generate mipmaps from first mip face (combatting visible dots artifact)
+	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+
+
+
+
+
+
+	// pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
+	// --------------------------------------------------------------------------------
+	glGenTextures(1, &irradianceMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+
+
+
+
+
+
+
+	// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+	// -----------------------------------------------------------------------------
+	irradianceShader->use();
+	irradianceShader->setInt("environmentMap", 0);
+	irradianceShader->setMat4("projection", captureProjection);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+	glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		irradianceShader->setMat4("view", captureViews[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		renderCube();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+
+
+
+	// pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
+	// --------------------------------------------------------------------------------
+	glGenTextures(1, &prefilterMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+	for (unsigned int i = 0; i < 6; ++i)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
+
+
+
+	// pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
+	// ----------------------------------------------------------------------------------------------------
+	prefilterShader->use();
+	prefilterShader->setInt("environmentMap", 0);
+	prefilterShader->setMat4("projection", captureProjection);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	unsigned int maxMipLevels = 5;
+	for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
+	{
+		// reisze framebuffer according to mip-level size.
+		unsigned int mipWidth = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+		unsigned int mipHeight = static_cast<unsigned int>(128 * std::pow(0.5, mip));
+		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+		glViewport(0, 0, mipWidth, mipHeight);
+
+		float roughness = (float)mip / (float)(maxMipLevels - 1);
+		prefilterShader->setFloat("roughness", roughness);
+		for (unsigned int i = 0; i < 6; ++i)
+		{
+			prefilterShader->setMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			renderCube();
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+	// pbr: generate a 2D LUT from the BRDF equations used.
+	// ----------------------------------------------------
+	glGenTextures(1, &brdfLUTTexture);
+
+	// pre-allocate enough memory for the LUT texture.
+	glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
+	// be sure to set wrapping mode to GL_CLAMP_TO_EDGE
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
+
+	glViewport(0, 0, 512, 512);
+	brdfShader->use();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	renderQuad();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+
+	//--POSTPROCCESS FrameBuffer
+	glGenFramebuffers(1, &postprocessingFBO);
+
+	// create floating point color buffer
+	glGenTextures(1, &colorBuffer);
+	glBindTexture(GL_TEXTURE_2D, colorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidth, viewportHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// create depth buffer (renderbuffer)
+	glGenRenderbuffers(1, &rboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewportWidth, viewportHeight);
+
+	// attach buffers
+	glBindFramebuffer(GL_FRAMEBUFFER, postprocessingFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0); //unbind texture
+	//------------------------------------------------------------------------------------------------------------
+
+	postprocessing_shader->use();
+	postprocessing_shader->setInt("hdrBuffer", 0);
 }
 
 void TestLayer::generateDirectionalLight()
@@ -416,7 +637,6 @@ void TestLayer::generateDirectionalLight()
 		std::cerr << "Ya exsite una luz direccional en la escena " << std::endl;
 	}
 }
-
 
 void TestLayer::getModelPathFromAssets(const std::string& filePath, const std::string& fileName)
 {
@@ -512,156 +732,7 @@ void TestLayer::OnEvent(GLCore::Event& event)
 
 
 
-void TestLayer::OnUpdate(GLCore::Timestep ts)
-{
-	manager.refresh();
-	manager.update();
 
-	entitiesInScene = manager.getAllEntities();
-
-	viewportHeight = windowHeight;
-	viewportWidth = windowWidth - width_dock_Inspector - width_dock_AssetScene;
-
-
-	//-POINTS LIGHT ->SHADOW MAP RENDERING--------------------------------------------------------------------
-	pointLight_shadow_mapping_depth_shader->use();
-	pointLight_shadow_mapping_depth_shader->setInt("numPointLights", pointLights.size());
-	for (unsigned int i = 0; i < pointLights.size(); i++)
-	{
-		if (pointLights[i]->getComponent<PointLight>().drawShadows == true)
-		{
-			pointLights[i]->getComponent<PointLight>().shadowMappingProjection(entitiesInScene);
-		}
-	}
-	//----------------------------------------------------------------------------------------------------------------------------
-
-
-	////-DIRECTIONAL LIGHT ->SHADOW MAP RENDERING--------------------------------------------------------------------
-	//if (directionalLight != nullptr)
-	//{
-	//	if (directionalLight->getComponent<DirectionalLight>().drawShadows == true)
-	//	{
-	//		directionalLight->getComponent <DirectionalLight>().shadowMappingProjection(entitiesInScene);
-	//	}
-	//}
-	////----------------------------------------------------------------------------------------------------------------------------
-
-
-
-	//--SELECT FRAMEBUFFER---------------------------------------------------------------
-	if (postpreccessing)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, postprocessingFBO);
-	}
-	else
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-	//----------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-	glViewport(0, 0, viewportWidth, viewportHeight);
-	glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-	//--CAMERA
-	aspectRatio = static_cast<float>(viewportWidth) / static_cast<float>(viewportHeight);
-	m_PerspectiveCameraController.GetCamera().SetProjection(m_PerspectiveCameraController.GetCamera().GetFov(), aspectRatio, 0.1f, 100.0f);
-	m_PerspectiveCameraController.OnUpdate(ts);
-	//----------------------------------------------------------------------------------------------------------------------------
-
-
-	//--DEBUG SHADER
-	debug_shader->use();
-	debug_shader->setMat4("projection", m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
-	debug_shader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
-	//----------------------------------------------------------------------------------------------------------------------------
-
-
-	//--MAIN SHADER (PBR)
-	pbrShader->use();
-	pbrShader->setMat4("projection", m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
-	pbrShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
-	pbrShader->setVec3("camPos", m_PerspectiveCameraController.GetCamera().GetPosition());
-
-	pbrShader->setVec3("globalAmbient", globalAmbient);
-	//----------------------------------------------------------------------------------------------------------------------------
-
-
-	////--DRAW DIR LIGHT
-	//if (directionalLight != nullptr)
-	//{
-	//	directionalLight->getComponent<DirectionalLight>().setDataInShader();
-	//}
-	////----------------------------------------------------------------------------------------------------------------------------
-
-	manager.draw();
-
-
-
-
-
-	//--DRAW POINTS LIGHT
-	pbrShader->use();
-	pbrShader->setInt("numPointLights", pointLights.size());
-	for (unsigned int i = 0; i < pointLights.size(); i++)//set lighting points uniforms
-	{
-		pointLights[i]->getComponent<PointLight>().setDataInShader();
-	}
-	//----------------------------------------------------------------------------------------------------------------------------
-	
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	
-
-	pbrShader->setBool("useHDR", useHDRIlumination);
-	if (useHDRIlumination == true)
-	{
-		// render skybox (render as last to prevent overdraw)
-		backgroundShader->use();
-		backgroundShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
-		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);  // display prefilter map
-		renderCube();
-
-		// render BRDF map to screen
-		//brdfShader->use();
-		//renderQuad();
-	}
-	
-	
-	
-	
-
-	//--POST-PROCCESSING
-	if (postpreccessing)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		postprocessing_shader->use();
-		glActiveTexture(GL_TEXTURE8);
-		glBindTexture(GL_TEXTURE_2D, colorBuffer);
-		
-		postprocessing_shader->setInt("hdr", postpreccessing);
-		postprocessing_shader->setInt("hdrBuffer", 8);
-		postprocessing_shader->setFloat("exposure", exposure);
-		postprocessing_shader->setFloat("gammaInput", gammaInput);
-		
-		glDisable(GL_DEPTH_TEST);
-		renderQuad();
-		glEnable(GL_DEPTH_TEST);
-	}
-	// --------------------------------------------------------------------------------------------------------------------------
-	
-
-	//--CHECK CLICK DRAWABLES
-	CheckIfPointerIsOverObject();
-}
 
 
 
@@ -715,6 +786,9 @@ void TestLayer::CheckIfPointerIsOverObject()
 		//Preparamos el rayo para lanzarlo desde la camara hasta la posicion del mouse ya convertido al espacio 3D
 		glm::vec3 rayOrigin = m_PerspectiveCameraController.GetCamera().GetPosition();
 		glm::vec3 rayDirection = glm::normalize(worldCoordinates - rayOrigin);
+		glm::vec3 rayEnd = vec3(0.0);
+
+
 
 		//En esta variable se guardará el maximo valor que de un float (a modo de inicializador con valor "infinito") 
 		float closestDistance = std::numeric_limits<float>::max();
@@ -730,13 +804,13 @@ void TestLayer::CheckIfPointerIsOverObject()
 				//Si el rayo atraviesa la BBox de un objeto, entra x aqui
 				if (rayIntersectsBoundingBox(rayOrigin, 
 											 rayDirection, 
-											 entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingBoxMin,
-										     entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingBoxMax))
+											 entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingVolume->m_min,
+										     entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingVolume->m_max))
 				{
 					//Miramos la distancia del origen del rayo (camara)  al centro de la boundingBox del objeto impactado con el rayo
 					float distance = glm::distance(rayOrigin,
-												   (entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingBoxMin +
-													entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingBoxMax) * 0.5f);
+												   (entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingVolume->m_min +
+													entities[i]->getComponent<Drawable>().modelInfo.model_mesh.boundingVolume->m_max) );
 
 					//Teniendo en cuenta que un rayo lo mas probable es que atraviese n objetos, con esta condicion nos quedaremos con el mas cercano, comparando la distancia a cada objeto y nos quedamos con el más cercano. 
 					if (distance < closestDistance)
@@ -794,6 +868,12 @@ bool TestLayer::rayIntersectsBoundingBox(const glm::vec3& rayOrigin, const glm::
 
 	return true;
 }
+
+
+
+
+
+
 void TestLayer::renderQuad()
 {
 	if (quadVAO == 0)
@@ -986,11 +1066,11 @@ void TestLayer::OnImGuiRender()
 			glm::mat4 camera_view = m_PerspectiveCameraController.GetCamera().GetViewMatrix();
 			glm::mat4 camera_projection = m_PerspectiveCameraController.GetCamera().GetProjectionMatrix();
 
-			glm::mat4 entity_transform = m_SelectedEntity->getComponent<Transform>().GetTransform();
+			glm::mat4 entity_transform = m_SelectedEntity->getComponent<Transform>().getLocalModelMatrix();
 
 			// Comprobación de parentesco
 			if (m_SelectedEntity->getComponent<Transform>().parent != nullptr) {
-				entity_transform = m_SelectedEntity->getComponent<Transform>().parent->getComponent<Transform>().GetTransform() * entity_transform;
+				entity_transform = m_SelectedEntity->getComponent<Transform>().parent->getComponent<Transform>().getLocalModelMatrix() * entity_transform;
 			}
 
 			switch (m_GizmoOperation)
@@ -1019,7 +1099,7 @@ void TestLayer::OnImGuiRender()
 
 				// Cálculo de la transformación local
 				if (m_SelectedEntity->getComponent<Transform>().parent != nullptr) {
-					glm::mat4 parent_transform = m_SelectedEntity->getComponent<Transform>().parent->getComponent<Transform>().GetTransform();
+					glm::mat4 parent_transform = m_SelectedEntity->getComponent<Transform>().parent->getComponent<Transform>().getLocalModelMatrix();
 					glm::mat4 local_transform = glm::inverse(parent_transform) * entity_transform;
 					glm::decompose(local_transform, scale, orientation, translation, skew, perspective);
 				}
@@ -1105,7 +1185,23 @@ void TestLayer::OnImGuiRender()
 
 	ImGui::ColorEdit3("Iluminación Ambiental", (float*)&globalAmbient);
 	ImGui::Checkbox("HDR ILUMINATION", &useHDRIlumination);
-	ImGui::Checkbox("HDR", &postpreccessing);
+	//ImGui::SliderFloat("Mix Factor", &mixFactor, 0.0f, 1.0f); // Los valores mínimos y máximos del slider son 0.0 y 1.0, respectivamente
+	
+	if (ImGui::SliderFloat("Mix Factor", &mixFactor, 0.0f, 1.0f)) {
+		isSliderActive = true;
+	}
+	else {
+		isSliderActive = false;
+	}
+	
+	
+	if (ImGui::Button("Apply Mix Factor"))
+	{
+		cleanUp();
+		prepare_PBR_IBL();
+	}
+	ImGui::Dummy(ImVec2(0.0f, 10.0f));
+	ImGui::Checkbox("POSTPROCESS", &postpreccessing);
 	ImGui::SliderFloat("Exposure", &exposure, 0.0f, 20.0f);
 	ImGui::SliderFloat("Gamma"   , &gammaInput, 0.0f, 20.0f);
 

@@ -24,7 +24,7 @@ GLCore::Image GLCore::Loaders::getOrLoadImage(const std::string& path) {
 
 GLCore::Image  GLCore::Loaders::load_from_file(const char* filename) {
 	Image image;
-	//stbi_set_flip_vertically_on_load(1);
+	stbi_set_flip_vertically_on_load(false);
 	image.pixels = stbi_load(filename, &(image.width), &(image.height), &(image.channels), 0);
 
 	if (image.pixels)
@@ -89,6 +89,7 @@ GLuint GLCore::Loaders::LoadIconTexture(const char* filepath)
 
 unsigned int GLCore::Loaders::loadTexture(char const* path)
 {
+	stbi_set_flip_vertically_on_load(false);
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
@@ -144,14 +145,14 @@ float GLCore::Loaders::rand_FloatRange(float a, float b)
 
 GLuint GLCore::Loaders::loadHDR(const char* filename)
 {
-	//stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
 	float* data = stbi_loadf(filename, &width, &height, &nrComponents, 0);
-	unsigned int hdrTexture{};
+	unsigned int hdrTexture_daylight{};
 	if (data)
 	{
-		glGenTextures(1, &hdrTexture);
-		glBindTexture(GL_TEXTURE_2D, hdrTexture);
+		glGenTextures(1, &hdrTexture_daylight);
+		glBindTexture(GL_TEXTURE_2D, hdrTexture_daylight);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data); // note how we specify the texture's data value to be float
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -168,5 +169,5 @@ GLuint GLCore::Loaders::loadHDR(const char* filename)
 		std::cout << "Failed to load HDR image." << std::endl;
 	}
 
-	return hdrTexture;
+	return hdrTexture_daylight;
 }

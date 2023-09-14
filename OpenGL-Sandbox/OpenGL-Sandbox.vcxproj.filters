@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ImGUI">
+      <UniqueIdentifier>{80FB640D-EC0F-8DBE-B591-301E216589EF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ImGUI\AssetsPanel.h">
+      <Filter>ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TestLayer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ImGUI\AssetsPanel.cpp">
+      <Filter>ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SandboxApp.cpp" />
+    <ClCompile Include="src\TestLayer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\ray.vs" />
+    <None Include="assets\shaders\ray.fs" />
+  </ItemGroup>
+</Project>

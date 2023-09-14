@@ -7,6 +7,7 @@
 #include <filesystem>
 #include "ImGUI/AssetsPanel.h"
 
+#include <chrono>
 
 class TestLayer : public GLCore::Layer
 {
@@ -59,7 +60,6 @@ private:
 	GLCore::Shader* debug_shader = nullptr;
 	GLCore::Shader* screen_shader = nullptr;
 
-
 	GLCore::Shader* pbrShader = nullptr;
 	GLCore::Shader* equirectangularToCubemapShader = nullptr;
 	GLCore::Shader* irradianceShader = nullptr;
@@ -72,6 +72,7 @@ private:
 
 	unsigned int quadVAO = 0;
 	unsigned int quadVBO;
+
 
 	//POST-PROCESSING CONTROLS
 	bool postpreccessing = false;
@@ -128,7 +129,13 @@ private:
 	unsigned int envCubemap;
 	unsigned int irradianceMap = 0;
 	unsigned int prefilterMap;
-	unsigned int hdrTexture;
+	unsigned int hdrTexture_daylight;
+	unsigned int hdrTexture_nightlight;
+	unsigned int brdfLUTTexture;
+
+
+	float mixFactor = 0.8f;
+
 	void renderQuad();
 	void renderCube();
 
@@ -141,6 +148,11 @@ private:
 
 	void generateDirectionalLight();
 	void generatePointLight();
+	static std::chrono::high_resolution_clock::time_point lastTime;
+	bool isSliderActive = false;
+
+	void cleanUp();
+	void prepare_PBR_IBL();
 
 
 	std::string ws2s(const std::wstring& wide);

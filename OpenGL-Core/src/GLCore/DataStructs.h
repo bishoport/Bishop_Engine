@@ -1,19 +1,152 @@
 #pragma once
 #include "glpch.h"
-
+#include <ECS/ECS.h>
+#include <memory>
 
 namespace GLCore 
 {
+    struct Plane
+    {
+        glm::vec3 normal = { 0.f, 1.f, 0.f }; // unit vector
+        float     distance = 0.f;        // Distance with origin
+
+        Plane() = default;
+
+        Plane(const glm::vec3& p1, const glm::vec3& norm)
+            : normal(glm::normalize(norm)),
+            distance(glm::dot(normal, p1))
+        {}
+
+        float getSignedDistanceToPlane(const glm::vec3& point) const
+        {
+            return glm::dot(normal, point) - distance;
+        }
+    };
+
+    struct Frustum
+    {
+        Plane topFace;
+        Plane bottomFace;
+
+        Plane rightFace;
+        Plane leftFace;
+
+        Plane farFace;
+        Plane nearFace;
+    };
+
+    struct BoundingVolume
+    {
+        virtual bool isOnFrustum(const Frustum& camFrustum, const ECS::Transform& transform) const = 0;
+
+        virtual bool isOnOrForwardPlane(const Plane& plane) const = 0;
+
+        bool isOnFrustum(const Frustum& camFrustum) const
+        {
+            return (isOnOrForwardPlane(camFrustum.leftFace) &&
+                isOnOrForwardPlane(camFrustum.rightFace) &&
+                isOnOrForwardPlane(camFrustum.topFace) &&
+                isOnOrForwardPlane(camFrustum.bottomFace) &&
+                isOnOrForwardPlane(camFrustum.nearFace) &&
+                isOnOrForwardPlane(camFrustum.farFace));
+        };
+    };
+
+    struct AABB : public BoundingVolume
+    {
+        glm::vec3 center{ 0.f, 0.f, 0.f };
+        glm::vec3 extents{ 0.f, 0.f, 0.f };
+
+        glm::vec3 m_max{ 0.f, 0.f, 0.f };
+        glm::vec3 m_min{ 0.f, 0.f, 0.f };
+
+        AABB() = default; // Constructor por defecto
+
+        AABB(const glm::vec3& min, const glm::vec3& max): BoundingVolume{}, center{ (max + min) * 0.5f }, extents{ max.x - center.x, max.y - center.y, max.z - center.z }
+        {
+            m_max = max;
+            m_min = min;
+        }
+
+        AABB(const glm::vec3& inCenter, float iI, float iJ, float iK): BoundingVolume{}, center{ inCenter }, extents{ iI, iJ, iK }
+        {}
+
+        std::array<glm::vec3, 8> getVertice() const
+        {
+            std::array<glm::vec3, 8> vertice;
+            vertice[0] = { center.x - extents.x, center.y - extents.y, center.z - extents.z };
+            vertice[1] = { center.x + extents.x, center.y - extents.y, center.z - extents.z };
+            vertice[2] = { center.x - extents.x, center.y + extents.y, center.z - extents.z };
+            vertice[3] = { center.x + extents.x, center.y + extents.y, center.z - extents.z };
+            vertice[4] = { center.x - extents.x, center.y - extents.y, center.z + extents.z };
+            vertice[5] = { center.x + extents.x, center.y - extents.y, center.z + extents.z };
+            vertice[6] = { center.x - extents.x, center.y + extents.y, center.z + extents.z };
+            vertice[7] = { center.x + extents.x, center.y + extents.y, center.z + extents.z };
+            return vertice;
+        }
+
+        //see https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_plane.html
+        bool isOnOrForwardPlane(const Plane& plane) const final
+        {
+            // Compute the projection interval radius of b onto L(t) = b.c + t * p.n
+            const float r = extents.x * std::abs(plane.normal.x) + extents.y * std::abs(plane.normal.y) +
+                extents.z * std::abs(plane.normal.z);
+
+            return -r <= plane.getSignedDistanceToPlane(center);
+        }
+
+        bool isOnFrustum(const Frustum& camFrustum, const ECS::Transform& transform) const final
+        {
+            //Get global scale thanks to our transform
+            const glm::vec3 globalCenter{ transform.getModelMatrix() * glm::vec4(center, 1.f) };
+
+            // Scaled orientation
+            const glm::vec3 right = transform.getRight() * extents.x;
+            const glm::vec3 up = transform.getUp() * extents.y;
+            const glm::vec3 forward = transform.getForward() * extents.z;
+
+            const float newIi = std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, right)) +
+                std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, up)) +
+                std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, forward));
+
+            const float newIj = std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, right)) +
+                std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, up)) +
+                std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, forward));
+
+            const float newIk = std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, right)) +
+                std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, up)) +
+                std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, forward));
+
+            const AABB globalAABB(globalCenter, newIi, newIj, newIk);
+
+            return (globalAABB.isOnOrForwardPlane(camFrustum.leftFace) &&
+                globalAABB.isOnOrForwardPlane(camFrustum.rightFace) &&
+                globalAABB.isOnOrForwardPlane(camFrustum.topFace) &&
+                globalAABB.isOnOrForwardPlane(camFrustum.bottomFace) &&
+                globalAABB.isOnOrForwardPlane(camFrustum.nearFace) &&
+                globalAABB.isOnOrForwardPlane(camFrustum.farFace));
+        };
+    };
+
+
+    struct VertexInfo {
+        glm::vec3 position;
+    };
 
 	struct MeshInfo
 	{
+
+        // Constructor predeterminado
+        MeshInfo() = default;
+
         std::string meshName;
 
 		unsigned int num_indices = 0;
                                                                                                         //Vertice------normals
 		std::vector<GLfloat> allBuffer;  //Secuenciados los datos de vetices normals textcords indices (1.0,2.0,0.0, 1.0,0.5,1.0, 2.3,4.5  ,2  )
 
-		std::vector<GLfloat> vertices;
+		//std::vector<GLfloat> vertices;
+        std::vector<VertexInfo> vertices;
         std::vector<GLfloat> normals;
         std::vector<GLfloat> texcoords;
         std::vector<GLuint> indices;
@@ -27,6 +160,11 @@ namespace GLCore
         GLuint VBO_BB, VAO_BB;
 
         //BOUNDIG BOX
+        //std::unique_ptr<AABB> boundingVolume;
+
+        AABB* boundingVolume;
+
+        // 
         // Guarda los vértices originales en alguna parte
         glm::vec3 originalBoundingBoxMax;
         glm::vec3 originalBoundingBoxMin;
@@ -40,7 +178,24 @@ namespace GLCore
         glm::vec3 meshScale;
 
 
+        AABB * generateAABB()
+        {
+            glm::vec3 minAABB = glm::vec3(std::numeric_limits<float>::max());
+            glm::vec3 maxAABB = glm::vec3(std::numeric_limits<float>::min());
+            
+            for (unsigned int i = 0; i < vertices.size(); i += 3)
+            {
 
+                minAABB.x = std::min(minAABB.x, vertices[i].position.x);
+                minAABB.y = std::min(minAABB.y, vertices[i].position.y);
+                minAABB.z = std::min(minAABB.z, vertices[i].position.z);
+
+                maxAABB.x = std::max(maxAABB.x, vertices[i].position.x);
+                maxAABB.y = std::max(maxAABB.y, vertices[i].position.y);
+                maxAABB.z = std::max(maxAABB.z, vertices[i].position.z);
+            }
+            return new AABB(minAABB, maxAABB);
+        }
 
         void CreateVAO()
         {
@@ -81,11 +236,6 @@ namespace GLCore
             //------------------------------------------------------------------------------------------------
         }
 
-
-
-
-
-
         void CreateInstanceVBO(const std::vector<glm::mat4>& instanceMatrices)
         {
             glCreateBuffers(1, &instanceVBO);
@@ -111,10 +261,6 @@ namespace GLCore
             glVertexArrayBindingDivisor(VAO, 1, 1);
         }
 
-
-
-
-
         void BindVAO(bool byInstance = true)
         {
             if (byInstance)
@@ -133,37 +279,9 @@ namespace GLCore
         }
 
 
-        void CalculateBoundingBox(glm::mat4 transformMatrix)
+        void CalculateBoundingBox()
         {
-            // Inicializar las bounding boxes a valores extremos
-            glm::vec3 _originalBoundingBoxMin(FLT_MAX, FLT_MAX, FLT_MAX);
-            glm::vec3 _originalBoundingBoxMax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-            glm::vec3 _boundingBoxMin(FLT_MAX, FLT_MAX, FLT_MAX);
-            glm::vec3 _boundingBoxMax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-
-
-            // Recorrer todos los vértices en el vector meshInfo.vertices
-            for (unsigned int i = 0; i < vertices.size(); i += 3)
-            {
-                // Obtener las coordenadas del vértice actual
-                glm::vec3 vertex = glm::vec3(vertices[i], vertices[i + 1], vertices[i + 2]);
-
-                // Actualizar los valores mínimos y máximos de la bounding box original
-                _originalBoundingBoxMin = glm::min(_originalBoundingBoxMin, vertex);
-                _originalBoundingBoxMax = glm::max(_originalBoundingBoxMax, vertex);
-
-                // Transformar las coordenadas del vértice al espacio mundial
-                glm::vec4 transformedVertex = transformMatrix * glm::vec4(vertex, 1.0f);
-
-                // Actualizar los valores mínimos y máximos de la bounding box en el espacio mundial
-                _boundingBoxMin = glm::min(_boundingBoxMin, glm::vec3(transformedVertex));
-                _boundingBoxMax = glm::max(_boundingBoxMax, glm::vec3(transformedVertex));
-            }
-
-            originalBoundingBoxMin = _originalBoundingBoxMin;
-            originalBoundingBoxMax = _originalBoundingBoxMax;
-            boundingBoxMin = _boundingBoxMin;
-            boundingBoxMax = _boundingBoxMax;
+            boundingVolume = generateAABB();
         }
 	};
 
@@ -216,12 +334,7 @@ namespace GLCore
         Texture aOMap;
         bool hasAoMap = false;
 
-
-
-        //SPECULAR (OLD)
-        Texture specularMap;
-        bool hasSpecularMap = false;
-
+        //VALUES
         float normalIntensity = 0.5f;
         float metallicValue = 0.0f;
         float roughnessValue = 0.05f;
@@ -230,17 +343,6 @@ namespace GLCore
 
         void PrepareMaterial()
         {
-            //glActiveTexture(GL_TEXTURE0);
-            //glBindTexture(GL_TEXTURE_2D, 0);
-            //glActiveTexture(GL_TEXTURE1);
-            //glBindTexture(GL_TEXTURE_2D, 0);
-            //glActiveTexture(GL_TEXTURE2);
-            //glBindTexture(GL_TEXTURE_2D, 0);
-            //glActiveTexture(GL_TEXTURE3);
-            //glBindTexture(GL_TEXTURE_2D, 0);
-            //glActiveTexture(GL_TEXTURE4);
-            //glBindTexture(GL_TEXTURE_2D, 0);
-
             //--------------------------------------DIFFUSE MAP TEXTURE--------------------------------------
             if (albedoMap.image.pixels && albedoMap.image.width > 0) {
                 glGenTextures(1, &albedoMap.textureID); //Aqui se genera por OpenGL un ID para la textura
@@ -251,23 +353,6 @@ namespace GLCore
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-               /* if (albedoMap.image.channels == 3)
-                {
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                        albedoMap.image.width,
-                        albedoMap.image.height,
-                        0, GL_RGB, GL_UNSIGNED_BYTE, albedoMap.image.pixels);
-                }
-                else if (albedoMap.image.channels == 4)
-                {
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                        albedoMap.image.width,
-                        albedoMap.image.height,
-                        0, GL_RGBA, GL_UNSIGNED_BYTE, albedoMap.image.pixels);
-
-                }*/
-
 
                 GLenum format;
                 if (albedoMap.image.channels == 1)
@@ -412,18 +497,16 @@ namespace GLCore
 
     struct ModelInfo
     {
+        // Constructor predeterminado
+        ModelInfo() = default;
+
         MeshInfo model_mesh;
         Material model_material;
-
-        // Global Bounding Box
-        //unsigned int VBO_BB, VAO_BB;
-        //glm::vec3 globalBoundingBoxMin; // Minimo global
-        //glm::vec3 globalBoundingBoxMax; // Maximo global
     };
 
     struct ModelParent
     {
         std::string name;
-        std::vector<ModelInfo> modelInfos;  // Contiene la información de todas las mallas
+        std::vector<ModelInfo> modelInfos;
     };
 }
