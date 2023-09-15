@@ -34,8 +34,6 @@ std::chrono::high_resolution_clock::time_point TestLayer::lastTime = std::chrono
 
 void TestLayer::OnAttach()
 {	
-
-
 	//--ImGUI Configuration--------------------
 	std::ifstream ifile("imgui.ini");
 	ini_file_exists = ifile.is_open();
@@ -55,16 +53,14 @@ void TestLayer::OnAttach()
 		});
 	//------------------------------------------------------------------------
 
-	/*glEnable(GL_DEPTH_TEST);
-	glEnable(GL_FRAMEBUFFER_SRGB);
-	glEnable(GL_DEPTH_CLAMP);*/
-
+	//--FLAGS-----------------------------------------------------------------
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
+	//------------------------------------------------------------------------
+
 
 	//--OTHERS--------------------------------
 	EnableGLDebugging();
-	//m_CurrentDirectory = s_AssetPath;
 	//------------------------------------------------------------------------
 
 	
@@ -109,6 +105,9 @@ void TestLayer::OnAttach()
 
 	backgroundShader	                     = new GLCore::Shader("assets/shaders/2.2.2.background.vs", 
 																  "assets/shaders/2.2.2.background.fs");
+
+	skyboxShader							 = new GLCore::Shader("assets/shaders/skybox/skybox.vs",
+																  "assets/shaders/skybox/skybox.fs");
 	//----------------------------------------------------------------------------------------------------------------------------
 	
 
@@ -121,13 +120,11 @@ void TestLayer::OnAttach()
 	//--------------------------------------------------------------------------------------
 
 
+
 	//--INIT VIEWPORT SIZE
 	viewportHeight = windowHeight;
 	viewportWidth = windowWidth - width_dock_Inspector - width_dock_AssetScene;
 	//--------------------------------------------------------------------------------------
-
-
-
 
 
 
@@ -142,7 +139,6 @@ void TestLayer::OnAttach()
 
 	// pbr: setup framebuffer
 	// ----------------------
-	
 	glGenFramebuffers(1, &captureFBO);
 	glGenRenderbuffers(1, &captureRBO);
 
@@ -152,13 +148,14 @@ void TestLayer::OnAttach()
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
 
-
 	// pbr: load the HDR environment map
 	// ---------------------------------
-	//hdrTexture_daylight = GLCore::Loaders::loadHDR("assets/textures/HDR/newport_loft.hdr");
-	//hdrTexture_daylight = GLCore::Loaders::loadHDR("assets/textures/HDR/rural_asphalt_road_4k.hdr");
 	hdrTexture_daylight = GLCore::Loaders::loadHDR("assets/textures/HDR/kloofendal_43d_clear_puresky_4k.hdr");
 	hdrTexture_nightlight = GLCore::Loaders::loadHDR("assets/textures/HDR/rural_asphalt_road_4k.hdr");
+
+
+	skybox = &manager.addEntity();
+	skybox->addComponent<Skybox>().setShaders(skyboxShader);
 
 	prepare_PBR_IBL();
 
@@ -200,8 +197,7 @@ void TestLayer::OnAttach()
 
 void TestLayer::OnUpdate(GLCore::Timestep ts)
 {
-
-	// Comprueba si han pasado 3 milisegundos y si el slider está activo
+	//--TIMER SKYBOX CHANGE
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<float, std::milli> elapsed = currentTime - lastTime;
 
@@ -210,6 +206,7 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 		prepare_PBR_IBL();
 		lastTime = currentTime;
 	}
+	//-------------------------------------------------------------------------------------------------------
 
 
 	manager.refresh();
@@ -302,9 +299,6 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 
 
 
-
-
-
 	//--DRAW POINTS LIGHT
 	pbrShader->use();
 	pbrShader->setInt("numPointLights", pointLights.size());
@@ -320,22 +314,33 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 	pbrShader->setBool("useHDR", useHDRIlumination);
 	if (useHDRIlumination == true)
 	{
+		glDepthFunc(GL_LEQUAL);
 		// render skybox (render as last to prevent overdraw)
 		backgroundShader->use();
+
+		glm::mat4 view = glm::mat4(glm::mat3(view));
+
+		// Escala la matriz de vista para hacer el skybox más grande
+		float scale = 10.0f; // Ajusta este valor para obtener el tamaño deseado para tu skybox
+		view = glm::scale(view, glm::vec3(scale, scale, scale));
 		backgroundShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
+		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);  // display prefilter map
-		renderCube();
-
-		// render BRDF map to screen
-		//brdfShader->use();
-		//renderQuad();
 	}
 
 
+	if (skybox->getComponent<Skybox>().active)
+	{
+		skybox->getComponent<Skybox>().cubemapTexture = prefilterMap;
+		skybox->getComponent<Skybox>().DrawSkybox(m_PerspectiveCameraController.GetCamera().GetViewMatrix(), m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
+	}
 
+	
 
 
 	//--POST-PROCCESSING
@@ -360,6 +365,8 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 	// --------------------------------------------------------------------------------------------------------------------------
 
 
+
+
 	//--CHECK CLICK DRAWABLES
 	CheckIfPointerIsOverObject();
 }
@@ -373,8 +380,6 @@ void TestLayer::generatePointLight()
 	pointLight_entity->getComponent<PointLight>().setLightValues(glm::vec3(0.0f), pointLights.size(), pbrShader, pointLight_shadow_mapping_depth_shader, debug_shader);
 	pointLights.push_back(pointLight_entity);
 }
-
-
 
 void TestLayer::cleanUp()
 {
@@ -392,8 +397,6 @@ void TestLayer::cleanUp()
 	glDeleteRenderbuffers(1, &captureRBO);
 	glDeleteRenderbuffers(1, &rboDepth);
 }
-
-
 
 void TestLayer::prepare_PBR_IBL()
 {
@@ -680,8 +683,6 @@ ModelParent TestLayer::loadFileModel(const std::string& filePath, const std::str
 
 void TestLayer::OnDetach(){}
 
-
-
 void TestLayer::OnEvent(GLCore::Event& event)
 {
 	if (event.GetEventType() == GLCore::EventType::WindowResize)
@@ -729,12 +730,6 @@ void TestLayer::OnEvent(GLCore::Event& event)
 
 	m_PerspectiveCameraController.OnEvent(event);
 }
-
-
-
-
-
-
 
 void TestLayer::CheckIfPointerIsOverObject()
 {
@@ -869,11 +864,6 @@ bool TestLayer::rayIntersectsBoundingBox(const glm::vec3& rayOrigin, const glm::
 	return true;
 }
 
-
-
-
-
-
 void TestLayer::renderQuad()
 {
 	if (quadVAO == 0)
@@ -902,13 +892,6 @@ void TestLayer::renderQuad()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
 }
-
-
-
-
-
-// renderCube() renders a 1x1 3D cube in NDC.
-// -------------------------------------------------
 
 void TestLayer::renderCube()
 {
@@ -1302,12 +1285,26 @@ void TestLayer::OnImGuiRender()
 
 
 
-
-
 	ImGui::SetNextWindowDockID(dock_id_Inspector, ImGuiCond_FirstUseEver);
 	ImGui::Begin("Inspector", nullptr);
+
 	if (m_SelectedEntity != nullptr)
 	{
+		//---------------------------SKYBOX REFERENCE COMPONENT------------------------------------------
+		if (m_SelectedEntity != nullptr && m_SelectedEntity->hascomponent<Skybox>())
+		{
+			ImGui::Text("Skybox");
+			Skybox* skyboxReference = &m_SelectedEntity->getComponent<Skybox>();
+
+			if (skyboxReference != nullptr)
+			{
+				ImGui::Checkbox("Active", &skyboxReference->active);
+			}
+			ImGui::Dummy(ImVec2(0.0f, 20.0f));
+		}
+		//-----------------------------------------------------------------------------------------
+
+
 		//---------------------------GRID REFERENCE COMPONENT------------------------------------------
 		if (m_SelectedEntity != nullptr && m_SelectedEntity->hascomponent<GridWorldReferenceComp>())
 		{

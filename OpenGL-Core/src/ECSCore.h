@@ -7,5 +7,6 @@
 #include "ECS/grid_world_comp.h"
 #include "ECS/point_light_comp.h"
 #include "ECS/directional_light_comp.h"
+#include "ECS/Skybox_comp.h"
 
 

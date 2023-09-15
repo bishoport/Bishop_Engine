@@ -48,6 +48,7 @@ private:
 	ECS::Entity* directionalLight = nullptr;
 	vec3 globalAmbient = glm::vec3(0.0f);
 
+	ECS::Entity* skybox = nullptr;
 
 	bool useHDRIlumination = false;
 
@@ -66,6 +67,8 @@ private:
 	GLCore::Shader* prefilterShader = nullptr;
 	GLCore::Shader* brdfShader = nullptr;
 	GLCore::Shader* backgroundShader = nullptr;
+
+	GLCore::Shader* skyboxShader = nullptr;
 
 	unsigned int cubeVAO = 0;
 	unsigned int cubeVBO = 0;
@@ -156,5 +159,7 @@ private:
 
 
 	std::string ws2s(const std::wstring& wide);
+
+	
 };
 

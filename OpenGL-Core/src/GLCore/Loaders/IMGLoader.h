@@ -1,6 +1,7 @@
 #pragma once
 #include <assimp/texture.h>
 #include <unordered_map>  // Incluye la librería necesaria
+#include <vector>
 #include <string>
 
 namespace GLCore::Loaders {
@@ -23,4 +24,6 @@ namespace GLCore::Loaders {
 
 
 	GLuint loadHDR(const char* filename);
+
+	GLuint loadCubemap(std::vector<const char*> faces);
 }
