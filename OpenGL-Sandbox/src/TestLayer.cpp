@@ -698,12 +698,12 @@ void TestLayer::OnEvent(GLCore::Event& event)
 		float viewportHeightT = windowHeight;
 		
 		//// Actualiza la textura adjunta al framebuffer personalizado
-		//glBindTexture(GL_TEXTURE_2D, colorBuffer);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidthT, viewportHeightT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glBindTexture(GL_TEXTURE_2D, colorBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewportWidthT, viewportHeightT, 0, GL_RGBA, GL_FLOAT, NULL);
 
 		//// Actualiza el objeto de renderbuffer adjunto para profundidad y stencil
-		//glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-		//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewportWidthT, viewportHeightT);
+		glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewportWidthT, viewportHeightT);
 
 		//// Configura el viewport de OpenGL al nuevo tamaño de la ventana
 		glViewport(0, 0, viewportWidthT, viewportHeightT);
