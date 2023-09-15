@@ -310,7 +310,6 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-
 	pbrShader->setBool("useHDR", useHDRIlumination);
 	if (useHDRIlumination == true)
 	{
@@ -318,12 +317,14 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 		// render skybox (render as last to prevent overdraw)
 		backgroundShader->use();
 
-		glm::mat4 view = glm::mat4(glm::mat3(view));
+	
+		glm::mat4 viewHDR = glm::mat4(glm::mat3(m_PerspectiveCameraController.GetCamera().GetViewMatrix()));
 
 		// Escala la matriz de vista para hacer el skybox más grande
-		float scale = 10.0f; // Ajusta este valor para obtener el tamaño deseado para tu skybox
-		view = glm::scale(view, glm::vec3(scale, scale, scale));
-		backgroundShader->setMat4("view", m_PerspectiveCameraController.GetCamera().GetViewMatrix());
+		float scale = 1.0f; // Ajusta este valor para obtener el tamaño deseado para tu skybox
+		viewHDR = glm::scale(viewHDR, glm::vec3(scale, scale, scale));
+		backgroundShader->setMat4("view", viewHDR);
+		backgroundShader->setMat4("projection", m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
 		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -331,12 +332,15 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);  // display prefilter map
+
+		backgroundShader->setInt("environmentMap", 0);
+		renderCube();
 	}
 
 
 	if (skybox->getComponent<Skybox>().active)
 	{
-		skybox->getComponent<Skybox>().cubemapTexture = prefilterMap;
+		//skybox->getComponent<Skybox>().cubemapTexture = prefilterMap;
 		skybox->getComponent<Skybox>().DrawSkybox(m_PerspectiveCameraController.GetCamera().GetViewMatrix(), m_PerspectiveCameraController.GetCamera().GetProjectionMatrix());
 	}
 
@@ -350,11 +354,11 @@ void TestLayer::OnUpdate(GLCore::Timestep ts)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		postprocessing_shader->use();
-		glActiveTexture(GL_TEXTURE8);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, colorBuffer);
 
 		postprocessing_shader->setInt("hdr", postpreccessing);
-		postprocessing_shader->setInt("hdrBuffer", 8);
+		postprocessing_shader->setInt("hdrBuffer", 0);
 		postprocessing_shader->setFloat("exposure", exposure);
 		postprocessing_shader->setFloat("gammaInput", gammaInput);
 
